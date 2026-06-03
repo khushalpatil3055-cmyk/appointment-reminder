@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Appointments Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
+
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="css/style.css"/>
+
+  <style>
+    /*  Dashboard-specific styles  */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header row */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .page-header h1 { font-size: 1.9rem; }
+    .page-header p  { color: var(--muted); font-size: 0.88rem; margin-top: 0.25rem; }
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    /* Stat cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.3rem;
+    }
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+    }
+    .stat-card.total    .value { color: var(--accent);  }
+    .stat-card.upcoming .value { color: var(--warning); }
+    .stat-card.reminded .value { color: var(--success); }
+
+    /* Table card */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-toolbar span { font-size: 0.88rem; font-weight: 500; color: var(--muted); }
+
+    /* Live indicator */
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--success);
+      font-weight: 500;
+    }
+    .live-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 0.75rem 1.3rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.025); }
+    tbody td { padding: 0.95rem 1.3rem; font-size: 0.9rem; }
+
+    .name-cell  { font-weight: 500; }
+    .phone-cell { color: var(--muted); font-size: 0.85rem; }
+
+    /* Empty / error state */
+    .state-box {
+      text-align: center;
+      padding: 3.5rem 1rem;
+      color: var(--muted);
+    }
+    .state-box .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .state-box p { font-size: 0.9rem; }
+
+    /* Skeleton loader */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, #2f3549 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 6px;
+      height: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stats .stat-card:last-child { grid-column: span 2; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header anim-1">
+      <div>
+        <h1>Appointments</h1>
+        <p>Live dashboard — auto-refreshes every 30 seconds</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="loadAppointments()">↻ Refresh</button>
+        <a href="index.html" class="btn-accent">+ New Appointment</a>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats anim-2">
+      <div class="stat-card total">
+        <div class="label">Total Booked</div>
+        <div class="value" id="statTotal">—</div>
+      </div>
+      <div class="stat-card upcoming">
+        <div class="label">Upcoming</div>
+        <div class="value" id="statUpcoming">—</div>
+      </div>
+      <div class="stat-card reminded">
+        <div class="label">Reminders Sent</div>
+        <div class="value" id="statReminded">—</div>
+      </div>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="table-card anim-3">
+      <div class="table-toolbar">
+        <span id="tableCount">Loading appointments...</span>
+        <span class="live-dot">Live</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Booked At</th>
+            <th>Appointment Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Skeleton while loading -->
+          <tr><td colspan="5"><div style="padding:1rem 1.3rem"><div class="skeleton" style="width:60%"></div></div></td></tr>
+          <tr><td colspan="5"><div style="padding:1rem 1.3rem"><div class="skeleton" style="width:45%"></div></div></td></tr>
+          <tr><td colspan="5"><div style="padding:1rem 1.3rem"><div class="skeleton" style="width:70%"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Dashboard Logic -->
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>
