@@ -1,7 +1,7 @@
 
 
 // Config
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = 'https://appointment-reminder-kpl0.onrender.com';
 
 // On page load 
 document.addEventListener('DOMContentLoaded', () => {
