@@ -45,14 +45,6 @@ async function loadAppointments() {
         </td></tr>`;
       return;
     }
-
-    //  Sort newest first & render rows 
-    appointments
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .forEach(appt => {
-        tbody.innerHTML += buildRow(appt);
-      });
-
     // Clear old rows first then re-render
     tbody.innerHTML = appointments
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
