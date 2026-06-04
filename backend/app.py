@@ -32,13 +32,11 @@ twilio_client      = TwilioClient(TWILIO_SID, TWILIO_AUTH_TOKEN)
 #  HELPER — Send WhatsApp / SMS message
 
 def send_message(to_number: str, message: str):
-    """
-    Sends a WhatsApp message via Twilio.
-    Falls back to SMS if WhatsApp prefix is not set.
-    """
     try:
-        from_number = TWILIO_FROM
-        to_formatted = f"whatsapp:{to_number}" if not to_number.startswith("whatsapp:") else to_number
+        # Make sure BOTH have whatsapp: prefix
+        from_number = "whatsapp:+14155238886"
+        
+        to_formatted = to_number if to_number.startswith("whatsapp:") else f"whatsapp:{to_number}"
 
         msg = twilio_client.messages.create(
             body=message,
@@ -49,7 +47,7 @@ def send_message(to_number: str, message: str):
         return True, msg.sid
 
     except Exception as e:
-        print(f"[Twilio] ERROR sending message: {e}")
+        print(f"[Twilio] ERROR: {e}")
         return False, str(e)
 
 
